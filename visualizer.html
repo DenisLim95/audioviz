@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Audio Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #f0f0f0;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.92);
+            padding: 12px 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(15, 76, 129, 0.08);
+            box-shadow: 0 10px 30px rgba(31, 38, 135, 0.15);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 240px;
+        }
+        
+        #song-info {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        #song-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #000;
+        }
+        
+        #song-artist {
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+        
+        .controls-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background: #e0e0e0;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex: 1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .back-button {
+            background: #e0e0e0;
+        }
+        
+        .back-button:hover {
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 100;
+            color: #1a1a1a;
+            box-shadow: 0 8px 20px rgba(31, 38, 135, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="controls">
+        <div id="song-info">
+            <div id="song-title">Loading...</div>
+            <div id="song-artist"></div>
+        </div>
+        <div class="controls-row">
+            <button id="playBtn">Play</button>
+            <button id="pauseBtn">Pause</button>
+        </div>
+        <button class="back-button" onclick="window.location.href='index.html'">← Back to Library</button>
+    </div>
+    
+    <div id="info">
+        Press Play to experience the wave visualization
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer;
+        let audioContext, analyser, dataArray, bufferLength;
+        let audioElement, audioSource;
+        let plane;
+        
+        // Initialize Three.js scene
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 50;
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 2);
+            scene.add(ambientLight);
+            
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+            pointLight.position.set(10, 10, 10);
+            scene.add(pointLight);
+            
+            createWaveVisualization();
+            animate();
+        }
+        
+        function createWaveVisualization() {
+            const geometry = new THREE.PlaneGeometry(60, 60, 50, 50);
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x667eea,
+                wireframe: true,
+                side: THREE.DoubleSide
+            });
+            plane = new THREE.Mesh(geometry, material);
+            plane.rotation.x = -Math.PI / 3;
+            scene.add(plane);
+        }
+        
+        function updateWaveVisualization() {
+            if (!plane || !analyser || !dataArray) return;
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            const positions = plane.geometry.attributes.position.array;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                const dataIndex = Math.floor((i / 3) / (positions.length / 3) * bufferLength);
+                const value = dataArray[dataIndex] / 255;
+                positions[i + 2] = value * 10;
+            }
+            
+            plane.geometry.attributes.position.needsUpdate = true;
+            
+            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+            plane.material.color.setHSL(average / 255, 1, 0.5);
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            updateWaveVisualization();
+            renderer.render(scene, camera);
+        }
+        
+        // Audio handling
+        function enforcePitchPreservation(element) {
+            element.preservesPitch = true;
+            element.mozPreservesPitch = true;
+            element.webkitPreservesPitch = true;
+        }
+        
+        async function setupAudio(src, isDataUrl = false) {
+            // Clean up old audio
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.remove();
+            }
+            
+            // Reset audio context to get clean state
+            if (audioContext) {
+                await audioContext.close();
+                audioContext = null;
+                audioSource = null;
+            }
+            
+            audioElement = new Audio();
+            audioElement.crossOrigin = "anonymous";
+            audioElement.preload = "auto";
+            audioElement.playbackRate = 1.0;
+            audioElement.defaultPlaybackRate = 1.0;
+            enforcePitchPreservation(audioElement);
+            
+            // Load the source after setting up properties
+            audioElement.src = src;
+            audioElement.load();
+            
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = false;
+        }
+        
+        function initAudioGraph() {
+            if (!audioElement) return;
+            if (audioSource) return; // Already initialized
+            
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('AudioContext sample rate:', audioContext.sampleRate);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+            }
+            
+            console.log('Creating media element source, playbackRate:', audioElement.playbackRate);
+            audioSource = audioContext.createMediaElementSource(audioElement);
+            audioSource.connect(analyser);
+            analyser.connect(audioContext.destination);
+        }
+        
+        // Load song based on URL parameters
+        function loadSong() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const songFilename = urlParams.get('song');
+            const isUpload = urlParams.get('upload');
+            
+            if (isUpload) {
+                const audioData = sessionStorage.getItem('uploadedAudio');
+                const audioName = sessionStorage.getItem('uploadedAudioName');
+                
+                if (audioData && audioName) {
+                    document.getElementById('song-title').textContent = audioName;
+                    document.getElementById('song-artist').textContent = 'Uploaded File';
+                    setupAudio(audioData, true);
+                } else {
+                    document.getElementById('song-title').textContent = 'Error loading file';
+                    window.location.href = 'index.html';
+                }
+            } else if (songFilename) {
+                // Load from audio library
+                const decodedName = decodeURIComponent(songFilename);
+                const songPath = decodedName.startsWith('audio/') ? decodedName : `audio/${decodedName}`;
+                const providedTitle = urlParams.get('title');
+                
+                document.getElementById('song-title').textContent = providedTitle
+                    ? decodeURIComponent(providedTitle)
+                    : decodedName.replace(/\.[^/.]+$/, '');
+                document.getElementById('song-artist').textContent = 'From Library';
+                
+                setupAudio(songPath);
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (!audioElement) return;
+            
+            try {
+                document.getElementById('info').textContent = 'Loading...';
+                
+                // Wait for audio to be FULLY loaded, not just ready to play
+                if (audioElement.readyState < 4) {
+                    await new Promise((resolve) => {
+                        audioElement.addEventListener('canplaythrough', resolve, { once: true });
+                        // Also trigger load if not already loading
+                        if (audioElement.readyState === 0) {
+                            audioElement.load();
+                        }
+                    });
+                }
+                
+                // Small delay to ensure buffer is stable
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Initialize audio graph BEFORE playing
+                initAudioGraph();
+                
+                if (audioContext && audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                // Another small delay after context resume
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                // Reset to beginning and ensure playback rate
+                audioElement.currentTime = 0;
+                audioElement.playbackRate = 1.0;
+                audioElement.defaultPlaybackRate = 1.0;
+                enforcePitchPreservation(audioElement);
+                
+                await audioElement.play();
+                
+                console.log('Playing - playbackRate:', audioElement.playbackRate, 'defaultPlaybackRate:', audioElement.defaultPlaybackRate);
+                
+                document.getElementById('info').textContent = 'Playing...🌊';
+            } catch (err) {
+                console.error('Error playing audio', err);
+                document.getElementById('info').textContent = 'Unable to play audio';
+            }
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (audioElement) {
+                audioElement.pause();
+                document.getElementById('info').textContent = 'Paused';
+            }
+        });
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Initialize
+        initScene();
+        loadSong();
+    </script>
+</body>
+</html>
