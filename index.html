@@ -214,16 +214,8 @@
     <div class="container">
         <header>
             <h1>playground</h1>
-            <p class="subtitle">some of my songs</p>
+            <p class="subtitle">This site is intended to be a space where I keep track of ongoing personal projects, primarily a playground for audio and other media.</p>
         </header>
-        
-        <div class="upload-section">
-            <p style="margin-bottom: 15px; color: #a0a0a0;">Or upload your own audio file:</p>
-            <div class="file-input-wrapper">
-                <input type="file" id="audioFile" accept="audio/*">
-                <label for="audioFile" class="file-input-label">📁 Upload Audio File</label>
-            </div>
-        </div>
         
         <div class="song-list" id="songList">
             <!-- Songs will be populated here -->
@@ -317,7 +309,8 @@
                 artist: "denis",
                 duration: "—",
                 filename: "audio/things fall apart.wav",
-                icon: ""
+                icon: "",
+                backgroundVideo: "videos/entropy.mp4"
             },
             {
                 title: "coltran",
@@ -361,26 +354,15 @@
                     song: song.filename,
                     title: song.title
                 });
+                if (song.backgroundVideo) {
+                    params.set('video', song.backgroundVideo);
+                }
                 navigateWithPortal(`visualizer.html?${params.toString()}`);
             });
             
             songList.appendChild(songRow);
         });
 
-        // Handle file upload
-        document.getElementById('audioFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                // Store file in sessionStorage as base64
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    sessionStorage.setItem('uploadedAudio', event.target.result);
-                    sessionStorage.setItem('uploadedAudioName', file.name);
-                    window.location.href = 'visualizer.html?upload=true';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
     </script>
 </body>
 </html>
