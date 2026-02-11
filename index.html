@@ -215,6 +215,7 @@
         <header>
             <h1>playground</h1>
             <p class="subtitle">some of my songs</p>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">💡 Hold Shift while clicking to use MIDI instrument visualizer</p>
         </header>
         
         <div class="upload-section">
@@ -326,6 +327,13 @@
                 filename: "audio/coltran.wav",
                 icon: ""
             },
+            {
+                title: "not cute anymore remix",
+                artist: "denis",
+                duration: "—",
+                filename: "audio/not cute anymore remix.wav",
+                icon: ""
+            },
         ];
 
         const portalOverlay = document.getElementById('portalOverlay');
@@ -356,12 +364,15 @@
                 <div class="song-meta">${song.duration}</div>
             `;
             
-            songRow.addEventListener('click', () => {
+            songRow.addEventListener('click', (e) => {
                 const params = new URLSearchParams({
                     song: song.filename,
                     title: song.title
                 });
-                navigateWithPortal(`visualizer.html?${params.toString()}`);
+                
+                // Check if Shift key is held for MIDI visualizer
+                const visualizerPage = e.shiftKey ? 'visualizer-midi.html' : 'visualizer.html';
+                navigateWithPortal(`${visualizerPage}?${params.toString()}`);
             });
             
             songList.appendChild(songRow);
@@ -382,5 +393,6 @@
             }
         });
     </script>
+    <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

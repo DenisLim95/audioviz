@@ -1,0 +1,7 @@
+# Requirements for MIDI visualization mapper
+mido>=1.2.10
+librosa>=0.10.0
+numpy>=1.24.0
+
+
+
