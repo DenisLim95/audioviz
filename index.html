@@ -42,43 +42,6 @@
             margin-bottom: 30px;
         }
         
-        .upload-section {
-            background: rgba(12, 20, 32, 0.9);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px dashed rgba(95, 180, 249, 0.3);
-            margin-bottom: 40px;
-            text-align: center;
-            box-shadow: 0 15px 40px rgba(4, 6, 10, 0.6);
-        }
-        
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-        }
-        
-        .file-input-wrapper input[type=file] {
-            position: absolute;
-            left: -9999px;
-        }
-        
-        .file-input-label {
-            display: inline-block;
-            padding: 12px 30px;
-            background: #253143;
-            color: #f5f6f8;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: 600;
-        }
-        
-        .file-input-label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        }
-        
         .song-list {
             display: flex;
             flex-direction: column;
@@ -216,15 +179,7 @@
             <h1>playground</h1>
             
         </header>
-        
-        <div class="upload-section">
-            <p style="margin-bottom: 15px; color: #a0a0a0;">Or upload your own audio file:</p>
-            <div class="file-input-wrapper">
-                <input type="file" id="audioFile" accept="audio/*">
-                <label for="audioFile" class="file-input-label">📁 Upload Audio File</label>
-            </div>
-        </div>
-        
+
         <div class="song-list" id="songList">
             <!-- Songs will be populated here -->
         </div>
@@ -312,21 +267,6 @@
             });
             
             songList.appendChild(songRow);
-        });
-
-        // Handle file upload
-        document.getElementById('audioFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                // Store file in sessionStorage as base64
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    sessionStorage.setItem('uploadedAudio', event.target.result);
-                    sessionStorage.setItem('uploadedAudioName', file.name);
-                    window.location.href = 'visualizer.html?upload=true';
-                };
-                reader.readAsDataURL(file);
-            }
         });
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
