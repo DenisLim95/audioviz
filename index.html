@@ -51,7 +51,7 @@
         
         .song-row {
             display: grid;
-            grid-template-columns: 40px 1fr 120px;
+            grid-template-columns: 40px 1fr;
             align-items: center;
             padding: 14px 18px;
             border-radius: 12px;
@@ -77,18 +77,6 @@
             font-size: 1rem;
             font-weight: 600;
             color: #f5f6f8;
-        }
-        
-        .song-row .song-artist {
-            color: #8da1bb;
-            font-size: 0.9rem;
-        }
-        
-        .song-row .song-meta {
-            text-align: right;
-            color: #7cc7ff;
-            font-size: 0.9rem;
-            font-weight: 600;
         }
         
         .portal-overlay {
@@ -168,7 +156,7 @@
             }
             
             .song-row {
-                grid-template-columns: 30px 1fr 80px;
+                grid-template-columns: 30px 1fr;
             }
         }
     </style>
@@ -190,41 +178,11 @@
     <script>
         // Define your song library here
         const songs = [
-            {
-                title: "drunk soul",
-                artist: "denis",
-                duration: "—",
-                filename: "audio/soul*.wav",
-                icon: ""
-            },
-            {
-                title: "look ma, no hands 1",
-                artist: "denis",
-                duration: "—",
-                filename: "audio/look-ma-1.wav",
-                icon: ""
-            },
-            {
-                title: "look ma, no hands 2",
-                artist: "denis",
-                duration: "—",
-                filename: "audio/look-ma-2.wav",
-                icon: ""
-            },
-            {
-                title: "things fall apart",
-                artist: "denis",
-                duration: "—",
-                filename: "audio/things fall apart.wav",
-                icon: ""
-            },
-            {
-                title: "not cute anymore remix",
-                artist: "denis",
-                duration: "—",
-                filename: "audio/not cute anymore remix.wav",
-                icon: ""
-            },
+            { title: "drunk soul", filename: "audio/soul*.wav" },
+            { title: "look ma, no hands 1", filename: "audio/look-ma-1.wav" },
+            { title: "look ma, no hands 2", filename: "audio/look-ma-2.wav" },
+            { title: "things fall apart", filename: "audio/things fall apart.wav" },
+            { title: "not cute anymore remix", filename: "audio/not cute anymore remix.wav" },
         ];
 
         const portalOverlay = document.getElementById('portalOverlay');
@@ -247,12 +205,8 @@
             const songRow = document.createElement('div');
             songRow.className = 'song-row';
             songRow.innerHTML = `
-                <div class="song-icon">${song.icon || '♪'}</div>
-                <div>
-                    <div class="song-title">${song.title}</div>
-                    <div class="song-artist">${song.artist}</div>
-                </div>
-                <div class="song-meta">${song.duration}</div>
+                <div class="song-icon">♪</div>
+                <div class="song-title">${song.title}</div>
             `;
             
             songRow.addEventListener('click', (e) => {
